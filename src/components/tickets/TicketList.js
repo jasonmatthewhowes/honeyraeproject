@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 //import css file per component
 import "./Tickets.css"
 
-export const TicketList = () => {
+export const TicketList = ({searchTermState}) => {
     //initial ticket list 
     const [tickets, setTickets] = useState([])
     //modified version of above depending on staff or not
@@ -19,6 +19,17 @@ export const TicketList = () => {
     const localHoneyUser = localStorage.getItem("honey_user")
     //the above returns a string, the below is to set the user as an object which is important becuase we need to be able to access the isStaff property on the object
     const honeyUserObject =JSON.parse(localHoneyUser)
+
+    //the below useEffect is to watch the searchTermState so that when the state changes (which it does by typing in to the search input, it then sets the filtered state using the search term
+    useEffect(
+        () => {
+            const searchedTickets = tickets.filter(ticket => {
+                return ticket.description.toLowerCase().startsWith(searchTermState.toLowerCase()) })
+            setFiltered(searchedTickets)
+        },
+        [searchTermState]
+    )
+
 
     //this useEffect is to monitor the state of the emergency true or false and also updates the filteredTickets array that is being displayed
     useEffect(
@@ -98,16 +109,16 @@ export const TicketList = () => {
                 <button onClick= {() => {setEmergency(false)} } >Show All</button>
         </>
         :     <>
-        //the create ticket button utlizes the navigate hook to take the user to the ticketform page
+        {/* the create ticket button utlizes the navigate hook to take the user to the ticketform page */}
                 <button onClick={() => navigate("/ticket/create")}>Create Ticket</button>
-       //  changes the state of the open ticket     
+        {/* changes the state of the open ticket */}
                 <button onClick={() => updateOpenOnly(true) }>Show Open Tickets</button>
                 <button onClick={() => updateOpenOnly(false) }>All My Tickets</button>
         </>
     }
 
    <h2>List of Tickets</h2>
-//uses string interpolation to print the HTML components. The map method prints out for each object
+{/* uses string interpolation to print the HTML components. The map method prints out for each object */}
    <article className="tickets">
     {
         //uses the filtered ticket array determined in the useEffect logic above, employees or not etc
