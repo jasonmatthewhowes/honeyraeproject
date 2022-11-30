@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react"
 //usenavigate is a hook that allows you to utilize the navigation hook. This is needed for the createticket button
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { Ticket } from "./Ticket"
 //import css file per component
 import "./Tickets.css"
 
-export const TicketList = () => {
+export const TicketList = ({searchTermState}) => {
     //initial ticket list 
     const [tickets, setTickets] = useState([])
+    //getting employees for display on claim
+    const [employees, setEmployees] = useState([])
     //modified version of above depending on staff or not
     const [filteredTickets, setFiltered] = useState([])
     // below defines a new useState that lets us determine if the ticket is an emergenct or not 
@@ -19,6 +22,17 @@ export const TicketList = () => {
     const localHoneyUser = localStorage.getItem("honey_user")
     //the above returns a string, the below is to set the user as an object which is important becuase we need to be able to access the isStaff property on the object
     const honeyUserObject =JSON.parse(localHoneyUser)
+
+    //the below useEffect is to watch the searchTermState so that when the state changes (which it does by typing in to the search input, it then sets the filtered state using the search term
+    useEffect(
+        () => {
+            const searchedTickets = tickets.filter(ticket => {
+                return ticket.description.toLowerCase().startsWith(searchTermState.toLowerCase()) })
+            setFiltered(searchedTickets)
+        },
+        [searchTermState]
+    )
+
 
     //this useEffect is to monitor the state of the emergency true or false and also updates the filteredTickets array that is being displayed
     useEffect(
@@ -36,12 +50,23 @@ export const TicketList = () => {
     )
 
     //mounts the ticket array by fetching the data, running the setTickets hook to set the values to be the response from the JSON Server. the empty Array at the end of the useEffect hook tells the effect to run on intial render
+    const getAllTickets = () => {
+        fetch (`http://localhost:8088/serviceTickets?_embed=employeeTickets`)
+        .then (res => res.json())
+        .then ((ticketArray) => {
+            setTickets(ticketArray)
+        } )
+    }
+
+    
     useEffect(
         () => {
-           fetch (`http://localhost:8088/serviceTickets`)
+            getAllTickets()
+
+           fetch (`http://localhost:8088/employees?_expand=user`)
                 .then (res => res.json())
-                .then ((ticketArray) => {
-                    setTickets(ticketArray)
+                .then ((employeeArray) => {
+                    setEmployees(employeeArray)
                 } )
             },
             []
@@ -98,31 +123,28 @@ export const TicketList = () => {
                 <button onClick= {() => {setEmergency(false)} } >Show All</button>
         </>
         :     <>
-        //the create ticket button utlizes the navigate hook to take the user to the ticketform page
+        {/* the create ticket button utlizes the navigate hook to take the user to the ticketform page */}
                 <button onClick={() => navigate("/ticket/create")}>Create Ticket</button>
-       //  changes the state of the open ticket     
+        {/* changes the state of the open ticket */}
                 <button onClick={() => updateOpenOnly(true) }>Show Open Tickets</button>
                 <button onClick={() => updateOpenOnly(false) }>All My Tickets</button>
         </>
     }
 
    <h2>List of Tickets</h2>
-//uses string interpolation to print the HTML components. The map method prints out for each object
+{/* uses string interpolation to print the HTML components. The map method prints out for each object */}
    <article className="tickets">
     {
         //uses the filtered ticket array determined in the useEffect logic above, employees or not etc
         filteredTickets.map(
-            (ticket) => {
-                //the key property is set below by using the primary key of the object 
-                return <section className="ticket" key={`ticket--${ticket.id}`}>
-                    <header>{ticket.description}</header>
-                    //ternary expression, if the ticket.emergency is true, then 
-                    <footer>Emergency: {ticket.emergency ? "🧨" : "No"}</footer>
-                </section>
-            }
+            (ticket) => < Ticket 
+            getAllTickets={getAllTickets}
+            employees={employees} 
+            currentUser={honeyUserObject} 
+            ticketObject={ticket} />
         )
-    }
-   </article>
+}
+        </article>
    </>
 }
 
