@@ -9,3 +9,22 @@
     padding: 0.7rem;
     margin: 0.5rem 0;
 }
+
+.ticket_delete {
+    display: flex;
+    background-color: rgb(240, 54, 54);
+    
+}
+
+.ticket_finish {
+    display: flex;
+    width: 110px;
+    justify-content: center;
+}
+
+.ticket__claim {
+    display: flex;
+    width: 110px;
+    justify-content: center;
+}
+
